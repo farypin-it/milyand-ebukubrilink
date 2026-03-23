@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <title>eBuku Agenlink</title>
+  <link rel="icon" type="image/png" href="./logo.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+  <style>
+    html, body { touch-action: pan-y; overscroll-behavior-y: none; }
+    input, button, select, textarea { touch-action: manipulation; font-size: 16px !important; }
+    
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #00529C; overflow-x: hidden; display: flex; flex-direction: column; min-height: 100vh;}
+    #app-wrapper { display: flex; width: 100%; flex-grow: 1; }
+    #sidebar { width: 260px; background: linear-gradient(180deg, #003b73, #00284d); color: white; transition: all 0.3s; z-index: 1040; position: fixed; height: 100vh; overflow-y: auto; border-right: 1px solid rgba(255,255,255,0.1);}
+    #sidebar .logo-container { text-align: center; padding: 30px 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;}
+    #sidebar-logo-img { width: 70px; height: 70px; object-fit: cover; border-radius: 50%; border: 3px solid #F37021; margin-bottom: 10px; }
+    #sidebar .nav-link { color: rgba(255,255,255,0.7); padding: 15px 25px; border-radius: 0; border-left: 4px solid transparent; cursor: pointer; font-weight: 500;}
+    #sidebar .nav-link:hover { background: rgba(255,255,255,0.05); color: white; }
+    #sidebar .nav-link.active { background: rgba(243, 112, 33, 0.1); color: #F37021; border-left-color: #F37021; }
+    #sidebar .nav-link i { margin-right: 10px; width: 20px; text-align: center; }
+    
+    #main-content { flex-grow: 1; padding: 0; transition: all 0.3s; margin-left: 260px; display: flex; flex-direction: column; min-height: 100vh; width: calc(100% - 260px); background-color: #f4f7f6; border-top-left-radius: 25px;}
+    .content-padding { padding: 25px; flex-grow: 1; max-width: 100%; overflow: hidden;}
+    
+    #mobile-header { background: #00529C; display: none; position: sticky; top: 0; z-index: 1030; width: 100%;}
+    
+    .bottom-nav { display: none; position: fixed; bottom: 0; width: 100%; background: #00529C; box-shadow: 0 -4px 15px rgba(0,0,0,0.2); z-index: 1040; justify-content: space-around; align-items: center; padding: 5px 0 10px 0; border-top-left-radius: 20px; border-top-right-radius: 20px;}
+    .bottom-nav-item { flex: 1; text-align: center; color: rgba(255,255,255,0.6); font-size: 11px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+    .bottom-nav-item.active { color: white; }
+    .bottom-nav-item i { font-size: 20px; display: block; margin-bottom: 4px; transition: 0.3s;}
+    .bottom-nav-item.active i { transform: translateY(-3px); color: #F37021;}
+    .bottom-nav-center { position: relative; top: -20px; flex: 1.2; }
+    .bottom-nav-center .circle { background: #F37021; color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 5px 15px rgba(243, 112, 33, 0.5); border: 5px solid #f4f7f6; transition: 0.3s;}
+    .bottom-nav-center.active .circle { transform: scale(1.1); box-shadow: 0 8px 20px rgba(243, 112, 33, 0.6); }
+    .bottom-nav-center i { font-size: 26px; margin: 0; color: white;}
+    
+    @media (max-width: 768px) { 
+      body { background-color: #f4f7f6; } 
+      body.is-logged-in .bottom-nav { display: flex !important; }
+      #main-content { border-radius: 0; margin-left: 0; width: 100%; margin-bottom: 75px; } 
+      #sidebar { display: none !important; } 
+      .content-padding { padding: 15px; } 
+      #mobile-header { display: flex; align-items: center; justify-content: space-between; } 
+      .app-footer { margin-bottom: 70px; }
+      .rekap-hp { font-size: 11px !important; }
+      .rekap-hp span { font-size: 13px !important; }
+      .rekap-hp-cuan { font-size: 15px !important; }
+      
+      /* PENYESUAIAN KOTAK DASHBOARD KHUSUS HP (Ukuran dan Spasi) */
+      .stat-card { padding: 12px !important; border-radius: 8px; }
+      .stat-card h3, .stat-card h4, .stat-card h5 { font-size: 1.15rem !important; margin-top: 4px; }
+      .stat-card .small { font-size: 0.75rem !important; }
+    }
+
+    .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .view-section { display: none; animation: fadeIn 0.4s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+    .stat-card { border-radius: 12px; color: white; border: none; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s;}
+    
+    .bg-gradient-primary { background: linear-gradient(135deg, #00529C 0%, #003b73 100%); }
+    .bg-gradient-success { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .bg-gradient-danger { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); }
+    .bg-gradient-warning { background: linear-gradient(135deg, #F37021 0%, #ff9a55 100%); }
+    .bg-gradient-info { background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); }
+    .bg-gradient-secondary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    
+    .table-sm th, .table-sm td { font-size: 0.85rem; vertical-align: middle; white-space: nowrap;}
+    #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    #image-workspace { max-width: 100%; max-height: 250px; display: none; margin-bottom: 15px; border-radius: 10px;}
+    
+    .login-bg { background: linear-gradient(-45deg, #00529C, #003b73, #00284d, #001830); position: fixed; top:0; left:0; width: 100%; height: 100%; z-index: 1000; display: flex; align-items: center; justify-content: center;}
+    .glass-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 15px 35px rgba(0,0,0,0.2); color: white; padding: 30px;}
+    .glass-input, .glass-icon { background: rgba(255,255,255,0.1) !important; color: white !important; border: none; }
+    .login-footer { position: absolute; bottom: 15px; width: 100%; text-align: center; color: rgba(255,255,255,0.6); font-size: 0.85rem; }
+    .app-footer { background: transparent; border-top: 1px solid #dee2e6; padding: 15px 0; text-align: center; color: #6c757d; font-size: 0.85rem; margin-top: auto;}
+    .badge-arsip { font-size: 10px; background-color: #dc3545; color: white; padding: 2px 5px; border-radius: 4px; margin-left: 5px;}
+    
+    .btn-floating { position: fixed; bottom: 90px; right: 20px; z-index: 1050; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s; background-color: #F37021; border-color: #F37021;}
+    .btn-floating:hover { transform: scale(1.1); background-color: #d95e16;}
+  </style>
+</head>
+<body>
+
+  <div id="loading-screen"><div class="spinner-border" style="width: 3rem; height: 3rem; color: #F37021;"></div><h5 class="mt-3 text-muted">Memuat Sistem...</h5></div>
+
+  <div id="view-login" class="login-bg" style="display: none;">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-5 col-lg-4">
+          <div class="card glass-card">
+            <div class="text-center mb-4"><img id="login-logo" src="" class="mb-3" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid #F37021; background:white;">
+            <h3 class="fw-bold mb-0" id="login-nama-toko">Nama Toko</h3>
+            <p class="small text-info mb-0" style="color:#F37021 !important;">eBuku Agenlink App</p></div>
+
+            <div class="mb-3"><div class="input-group"><span class="input-group-text glass-icon"><i class="fa-solid fa-user"></i></span><input type="text" id="login-username" class="form-control glass-input" placeholder="Username"></div></div>
+            <div class="mb-3"><div class="input-group"><span class="input-group-text glass-icon"><i class="fa-solid fa-lock"></i></span><input type="password" id="login-password" class="form-control glass-input" placeholder="Password"><button class="btn btn-outline-light glass-icon border-start-0" type="button" onclick="togglePassword('login-password', 'eye-icon-login')"><i id="eye-icon-login" class="fa-solid fa-eye"></i></button></div></div>
+            <div class="text-end mb-4"><a href="#" onclick="event.preventDefault(); modalLupaPassword()" class="small text-decoration-none" style="color: #F37021;">Lupa Password?</a></div>
+            <button class="btn w-100 fw-bold py-2 rounded-pill text-white mb-3" style="background-color: #F37021;" onclick="handleLogin()" id="btn-login"><i class="fa-solid fa-right-to-bracket"></i> Masuk Aplikasi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="login-footer">eBuku Agenlink App &copy; 2026 <span id="login-footer-toko" class="fw-bold text-white">Nama Toko</span><br><a href="#" onclick="event.preventDefault(); modalPrivasi()" class="text-decoration-none" style="color:#F37021;">Kebijakan Privasi</a> | Powered by : <a href='https://www.farypin-inovasiteknologi.com' rel='dofollow' style='color:white;'>PT Farypin Inovasi Teknologi</a></div>
+  </div>
+
+  <div id="app-wrapper" style="display: none;">
+    <button onclick="reloadDataApp()" class="btn text-white btn-floating" title="Muat Ulang Data"><i id="ikon-reload" class="fa-solid fa-arrows-rotate fs-5"></i></button>
+    <div id="sidebar" class="d-none d-md-block">
+      <div class="logo-container"><img id="sidebar-logo-img" src="" alt="Logo" style="background:white;"><h5 class="fw-bold mb-0 mt-2" id="sidebar-nama-toko">BukuLink</h5><small style="color: #F37021;">eBuku AgenLink</small></div>
+      <nav class="nav flex-column mt-2">
+        <a class="nav-link active menu-dashboard" onclick="pindahMenu('view-dashboard')"><i class="fa-solid fa-chart-pie"></i> Dashboard Utama</a>
+        <a class="nav-link menu-atur-tarif" onclick="pindahMenu('view-atur-tarif')"><i class="fa-solid fa-tags"></i> Atur Tarif</a>
+        <a class="nav-link menu-transaksi" onclick="pindahMenu('view-transaksi')"><i class="fa-solid fa-database"></i> Transaksi</a>
+        <a class="nav-link menu-piutang" onclick="pindahMenu('view-piutang')"><i class="fa-solid fa-book-open"></i> Catatan Bon (Piutang)</a>
+        <a class="nav-link menu-laporan" onclick="pindahMenu('view-laporan')"><i class="fa-solid fa-file-pdf"></i> Laporan PDF</a>
+        
+        <a class="nav-link menu-akun mt-4 border-top pt-3" onclick="pindahMenu('view-akun')"><i class="fa-solid fa-users-cog"></i> Manajemen Akun</a>
+        <a class="nav-link menu-atur-profil" onclick="pindahMenu('view-atur-profil')"><i class="fa-solid fa-store"></i> Profil Toko</a>
+        
+        <a class="nav-link text-danger mt-2" onclick="logout()"><i class="fa-solid fa-power-off"></i> Keluar</a>
+      </nav>
+    </div>
+
+    <div id="main-content">
+      <div id="mobile-header" class="shadow-sm">
+        <div class="d-flex justify-content-between align-items-center w-100 px-3 py-2 flex-nowrap">
+          <div class="d-flex align-items-center text-truncate me-2" style="min-width: 0;">
+            <img id="mobile-logo-img" src="" style="width: 32px; height: 32px; object-fit: cover; border-radius: 50%; border: 2px solid #F37021; margin-right: 10px; background:white; flex-shrink: 0;">
+            <span class="fw-bold mb-0 text-white text-truncate" id="mobile-nama-toko" style="font-size: 15px;">eBuku Agenlink</span>
+          </div>
+          <div class="d-flex flex-shrink-0">
+            <button class="btn btn-sm py-1 px-2 fw-bold rounded me-1 text-white btn-akun-mobile" style="border: 1px solid #F37021;" onclick="pindahMenu('view-akun')"><i class="fa-solid fa-users-cog"></i></button>
+            <button class="btn btn-sm py-1 px-2 fw-bold rounded me-2 text-white btn-profil-mobile" style="border: 1px solid #F37021;" onclick="pindahMenu('view-atur-profil')"><i class="fa-solid fa-store"></i></button>
+            <button class="btn btn-danger btn-sm py-1 px-2 fw-bold rounded" onclick="logout()"><i class="fa-solid fa-power-off"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-padding">
+        
+        <div id="view-dashboard" class="view-section" style="display: block;">
+          <h4 class="fw-bold mb-4 text-dark" style="color: #00529C !important;"><i class="fa-solid fa-chart-pie"></i> Rekapitulasi <span id="label-role" class="badge bg-secondary ms-2" style="font-size: 12px;"></span></h4>
+          
+          <div class="row g-2 mb-4">
+            <div class="col-6 col-md-6"><div class="stat-card bg-gradient-primary h-100 p-3"><div class="small mb-1"><i class="fa-solid fa-receipt"></i> Trx (Hari Ini)</div><h3 class="fw-bold mb-0" id="dash-trx">0</h3></div></div>
+            <div class="col-6 col-md-6"><div class="stat-card bg-gradient-success h-100 p-3"><div class="small mb-1"><i class="fa-solid fa-sack-dollar"></i> Cuan (Hari Ini)</div><h4 class="fw-bold mb-0" id="dash-cuan">Rp 0</h4></div></div>
+            
+            <div class="col-12 col-md-4"><div class="stat-card bg-gradient-warning text-dark h-100 p-3"><div class="small mb-1"><i class="fa-solid fa-hand-holding-dollar"></i> Pelanggan</div><h5 class="fw-bold mb-0" id="dash-pel">Rp 0</h5></div></div>
+            <div class="col-12 col-md-4"><div class="stat-card bg-gradient-danger h-100 p-3"><div class="small mb-1"><i class="fa-solid fa-building-columns"></i> Adm Bank</div><h5 class="fw-bold mb-0" id="dash-bank">Rp 0</h5></div></div>
+            <div class="col-12 col-md-4"><div class="stat-card bg-gradient-secondary h-100 p-3"><div class="small mb-1"><i class="fa-solid fa-piggy-bank"></i> Fee Bank</div><h5 class="fw-bold mb-0" id="dash-fee">Rp 0</h5></div></div>
+          </div>
+
+          <div class="card border-0 shadow-sm rounded-3 mb-4 w-100"><div class="card-header bg-white fw-bold py-3" style="color: #00529C;"><i class="fa-solid fa-chart-line"></i> Grafik Tren Keuntungan</div><div class="card-body"><canvas id="chartKeuntungan" height="100"></canvas></div></div>
+        </div>
+
+        <div id="view-akun" class="view-section">
+          <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-users-cog" style="color:#F37021;"></i> Manajemen Akun</h4>
+          
+          <div id="akun-superadmin" class="card border-0 shadow-sm rounded-3 w-100 mb-4" style="display:none;">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-primary mb-0"><i class="fa-solid fa-list"></i> Daftar Pengguna</h6>
+                <button class="btn btn-primary btn-sm fw-bold shadow-sm" style="background-color:#00529C; border:none;" onclick="bukaModalAkunTambah()"><i class="fa-solid fa-plus"></i> Tambah Akun</button>
+              </div>
+              <div class="table-responsive bg-white border rounded">
+                <table class="table table-hover table-sm mb-0">
+                  <thead class="table-dark text-center" style="--bs-table-bg: #00529C;"><tr><th>Username</th><th>Email</th><th>Role</th><th>Cabang</th><th>Aksi</th></tr></thead>
+                  <tbody id="tabel-akun" class="text-center"><tr><td colspan="5">Memuat data...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="akun-cabang" class="card border-0 shadow-sm rounded-3 w-100" style="display:none;">
+            <div class="card-body">
+              <h6 class="fw-bold mb-3 text-danger"><i class="fa-solid fa-user-shield"></i> Ubah Password Cabang</h6>
+              <div class="mb-3"><label class="form-label small fw-bold">Nama Cabang Anda</label><input type="text" id="cabang-saya-info" class="form-control fw-bold text-secondary" readonly></div>
+              <div class="mb-3"><label class="form-label small fw-bold">Username</label><input type="text" id="username-saya-info" class="form-control fw-bold text-secondary" readonly></div>
+              <div class="mb-3">
+                <label class="form-label small fw-bold">Password Baru</label>
+                <div class="input-group"><input type="password" id="set-password-cabang" class="form-control" placeholder="Ketik sandi baru..."><button class="btn btn-outline-secondary" type="button" onclick="togglePassword('set-password-cabang', 'eye-icon-cabang')"><i id="eye-icon-cabang" class="fa-solid fa-eye"></i></button></div>
+              </div>
+              <button class="btn w-100 py-3 fw-bold shadow text-white" style="background-color:#F37021;" onclick="simpanPasswordCabang()" id="btn-simpan-pass-cabang"><i class="fa-solid fa-save"></i> UPDATE PASSWORD</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-atur-tarif" class="view-section">
+          <h4 class="fw-bold mb-4 text-success"><i class="fa-solid fa-tags"></i> Atur Tarif Otomatis</h4>
+          <div class="card border-0 shadow-sm rounded-3 mb-4 w-100">
+            <div class="card-body">
+              <div class="mb-3"><label class="fw-bold">Pilih Jenis Transaksi:</label>
+                <select id="tarif-jenis-filter" class="form-select border-success fw-bold" onchange="renderTabelSetupTarif()">
+                  <option value="Tarik Tunai">Tarik Tunai</option>
+                  <option value="Transfer Sesama BRI">Transfer Sesama BRI</option>
+                  <option value="Transfer Bank Lain">Transfer Bank Lain</option>
+                  <option value="Bayar Tagihan/Briva">Bayar Tagihan/Briva</option>
+                  <option value="Top Up E-Wallet">Top Up E-Wallet</option>
+                  <option value="Jasa Transfer Sesama">Jasa Transfer (Rek. Pelanggan) Sesama BRI</option>
+                  <option value="Jasa Transfer Bank Lain">Jasa Transfer (Rek. Pelanggan) Bank Lain</option>
+                </select>
+              </div>
+              <div class="bg-light p-3 rounded mb-3 border">
+                <h6 class="fw-bold text-success mb-2">Tambah Rentang Baru</h6>
+                <div class="row g-2 mb-2">
+                  <div class="col-md-6"><label class="small">Min Nominal</label><input type="text" inputmode="numeric" id="tarif-min" class="form-control" oninput="formatInputUang(event)"></div>
+                  <div class="col-md-6"><label class="small">Max Nominal</label><input type="text" inputmode="numeric" id="tarif-max" class="form-control" oninput="formatInputUang(event)"></div>
+                </div>
+                <div class="row g-2 align-items-end">
+                  <div class="col-md-3"><label class="small text-success fw-bold">Biaya Pelanggan</label><input type="text" inputmode="numeric" id="tarif-adm" class="form-control" oninput="formatInputUang(event)"></div>
+                  <div class="col-md-3"><label class="small text-danger fw-bold">Admin Bank</label><input type="text" inputmode="numeric" id="tarif-adm-bank" class="form-control" oninput="formatInputUang(event)"></div>
+                  <div class="col-md-3"><label class="small text-info fw-bold" style="color:#764ba2 !important;">Fee Bank</label><input type="text" inputmode="numeric" id="tarif-fee-bank" class="form-control" oninput="formatInputUang(event)"></div>
+                  <div class="col-md-3"><button class="btn btn-success fw-bold w-100" onclick="tambahTarif()"><i class="fa-solid fa-plus"></i> Tambah</button></div>
+                </div>
+              </div>
+              <div class="table-responsive"><table class="table table-sm table-bordered text-center mb-0"><thead class="table-dark" style="--bs-table-bg: #00529C;"><tr><th>Min</th><th>Max</th><th>Pelanggan</th><th>Bank</th><th>Fee</th><th>Del</th></tr></thead><tbody id="tabel-setup-tarif"></tbody></table></div>
+              <button class="btn btn-primary w-100 mt-4 fw-bold shadow-sm" style="background-color:#00529C; border:none;" onclick="simpanTarifKeServer()" id="btn-simpan-tarif"><i class="fa-solid fa-cloud-arrow-up"></i> Simpan Tarif</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-transaksi" class="view-section">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold mb-0" style="color: #00529C;"><i class="fa-solid fa-database"></i> Transaksi</h4>
+            <button class="btn btn-primary btn-sm fw-bold shadow-sm" style="background-color:#00529C; border:none;" onclick="bukaModalTambah()"><i class="fa-solid fa-plus"></i> Tambah</button>
+          </div>
+          <div class="card border-0 shadow-sm rounded-3 w-100">
+            <div class="card-body bg-light px-2 px-md-3">
+              <div class="row g-2 mb-3 align-items-center">
+                <div class="col-md-2 col-6 area-filter-cabang">
+                  <label class="small fw-bold">Cabang</label>
+                  <select id="filter-cabang" class="form-select form-select-sm"><option value="">Semua</option></select>
+                </div>
+                <div class="col-md-3 col-6"><label class="small fw-bold">Jenis</label>
+                  <select id="filter-jenis" class="form-select form-select-sm">
+                    <option value="">Semua Jenis</option>
+                    <option value="Tarik Tunai">Tarik Tunai</option>
+                    <option value="Transfer Sesama BRI">Transfer Sesama BRI</option>
+                    <option value="Transfer Bank Lain">Transfer Bank Lain</option>
+                    <option value="Bayar Tagihan/Briva">Bayar Tagihan/Briva</option>
+                    <option value="Top Up E-Wallet">Top Up E-Wallet</option>
+                    <option value="Jasa Transfer Sesama">Jasa Transfer (Rek. Pelanggan) Sesama BRI</option>
+                  <option value="Jasa Transfer Bank Lain">Jasa Transfer (Rek. Pelanggan) Bank Lain</option>
+                  </select>
+                </div>
+                <div class="col-md-2 col-6"><label class="small fw-bold">Dari Tgl</label><input type="date" id="filter-start" class="form-control form-control-sm"></div>
+                <div class="col-md-2 col-6"><label class="small fw-bold">Sampai</label><input type="date" id="filter-end" class="form-control form-control-sm"></div>
+                <div class="col-md-3 col-12"><button class="btn btn-success btn-sm w-100 fw-bold mt-md-4" onclick="terapkanFilter()"><i class="fa-solid fa-filter"></i> Filter</button></div>
+              </div>
+              <div class="form-check form-switch mb-3 bg-white p-2 rounded border">
+                <input class="form-check-input ms-1" type="checkbox" id="toggle-arsip" onchange="toggleModeArsip(this.id)">
+                <label class="form-check-label small fw-bold text-danger ms-2" for="toggle-arsip">Muat Data Arsip (> 40 Hari)</label>
+              </div>
+              <div class="table-responsive bg-white border rounded mb-2">
+                <table class="table table-hover table-sm mb-0">
+                  <thead class="table-dark text-center" style="--bs-table-bg: #00529C;"><tr><th>Tgl/Cabang</th><th>Jenis</th><th>Nominal</th><th>Bank</th><th>Fee</th><th>Pelanggan</th><th>Cuan</th><th>Aksi</th></tr></thead>
+                  <tbody id="tabel-riwayat" class="text-center"><tr><td colspan="8">Memuat data...</td></tr></tbody>
+                </table>
+              </div>
+              <nav><ul class="pagination pagination-sm justify-content-center" id="pagination-container"></ul></nav>
+            </div>
+            <div class="card-footer bg-white border-top border-3 p-2 p-md-3" style="border-color:#F37021 !important;">
+              <div class="row text-center fw-bold text-dark rekap-hp">
+                <div class="col-6 col-md text-center border-end border-bottom p-1">Trx<br><span id="sum-trx" style="color: #00529C;">0</span></div>
+                <div class="col-6 col-md text-center border-bottom p-1">Total Cuan<br><span id="sum-cuan" style="color: #00529C;" class="rekap-hp-cuan">Rp 0</span></div>
+                <div class="col-4 col-md text-center border-end p-1 pt-2">Bank<br><span id="sum-adm" class="text-danger">Rp 0</span></div>
+                <div class="col-4 col-md text-center border-end p-1 pt-2">Fee Bank<br><span id="sum-fee-bank" class="text-secondary" style="color: #764ba2 !important;">Rp 0</span></div>
+                <div class="col-4 col-md text-center p-1 pt-2">Pelanggan<br><span id="sum-biaya-pel" class="text-success">Rp 0</span></div>
+                <div id="sum-nom" style="display:none;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-piutang" class="view-section">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold text-dark mb-0"><i class="fa-solid fa-book-open" style="color:#F37021;"></i> Catatan Bon</h4>
+            <button class="btn btn-sm fw-bold shadow-sm text-white" style="background-color:#F37021;" onclick="bukaModalBonTambah()"><i class="fa-solid fa-plus"></i> Tambah Bon</button>
+          </div>
+          <div class="card border-0 shadow-sm rounded-3 w-100">
+            <div class="card-body bg-light px-2 px-md-3">
+              <div class="d-flex justify-content-end mb-2"><button class="btn btn-danger btn-sm fw-bold" onclick="unduhPDFBon()"><i class="fa-solid fa-file-pdf"></i> Unduh Laporan Bon</button></div>
+              <div class="table-responsive bg-white border rounded mb-2">
+                <table class="table table-hover table-sm mb-0">
+                  <thead class="table-dark text-center" style="--bs-table-bg: #00529C;"><tr><th>Tgl/Cabang</th><th>Nama Pelanggan</th><th>Nominal</th><th>Status</th><th>Tgl Lunas</th><th>Aksi</th></tr></thead>
+                  <tbody id="tabel-bon" class="text-center"><tr><td colspan="6">Memuat data...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-laporan" class="view-section">
+          <h4 class="fw-bold mb-4 text-danger"><i class="fa-solid fa-file-pdf"></i> Unduh Laporan PDF</h4>
+          <div class="card border-0 shadow-sm rounded-3 w-100">
+            <div class="card-body px-2 px-md-3">
+              <div class="row g-2 mb-2 align-items-end bg-light p-3 rounded border">
+                <div class="col-md-2 col-12 area-filter-cabang"><label class="small fw-bold">Cabang</label><select id="lap-cabang" class="form-select form-select-sm"><option value="">Semua</option></select></div>
+                <div class="col-md-3 col-12"><label class="small fw-bold">Jenis</label>
+                  <select id="lap-jenis" class="form-select form-select-sm">
+                    <option value="">Semua Jenis</option>
+                    <option value="Tarik Tunai">Tarik Tunai</option>
+                    <option value="Transfer Sesama BRI">Transfer Sesama BRI</option>
+                    <option value="Transfer Bank Lain">Transfer Bank Lain</option>
+                    <option value="Bayar Tagihan/Briva">Bayar Tagihan/Briva</option>
+                    <option value="Top Up E-Wallet">Top Up E-Wallet</option>
+                    <option value="Jasa Transfer Sesama">Jasa Transfer (Rek. Pelanggan) Sesama BRI</option>
+                   <option value="Jasa Transfer Bank Lain">Jasa Transfer (Rek. Pelanggan) Bank Lain</option>
+                  </select>
+                </div>
+                <div class="col-md-2 col-6"><label class="small fw-bold">Dari Tgl</label><input type="date" id="lap-start" class="form-control form-control-sm"></div>
+                <div class="col-md-2 col-6"><label class="small fw-bold">Sampai Tanggal</label><input type="date" id="lap-end" class="form-control form-control-sm"></div>
+                <div class="col-md-3 col-12"><button class="btn btn-sm w-100 fw-bold text-white mb-2" style="background-color:#00529C;" onclick="prosesLaporan()">Tampilkan</button><button class="btn btn-danger btn-sm w-100 fw-bold" onclick="unduhPDF()"><i class="fa-solid fa-download"></i> Unduh</button></div>
+              </div>
+              <div class="form-check form-switch mb-4"><input class="form-check-input" type="checkbox" id="toggle-arsip-lap" onchange="toggleModeArsip(this.id)"><label class="form-check-label small fw-bold text-danger">Termasuk Data Arsip</label></div>
+              
+              <div id="area-cetak" style="background: white; padding: 15px; width: 100%;">
+                <div class="d-flex align-items-center mb-3 pb-3 border-bottom" style="border-color: #000 !important;">
+                  <img id="pdf-logo" src="" style="width: 70px; height: 70px; object-fit: cover; border-radius: 5px; margin-right: 15px;">
+                  <div class="text-start"><h4 class="fw-bold mb-0 text-dark" id="pdf-nama-toko" style="text-transform: uppercase;">NAMA TOKO</h4><p class="mb-0 text-dark" id="pdf-alamat" style="font-size: 13px;">Alamat Toko</p></div>
+                </div>
+                <div class="text-center mb-4"><h5 class="fw-bold mb-1 text-dark" style="text-decoration: underline;">LAPORAN TRANSAKSI KEUANGAN HARIAN</h5><small id="kop-periode" class="fw-bold" style="color: #F37021;">Periode: Semua Data</small></div>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-sm mb-4" style="color: black; border-color: #000 !important;">
+                    <thead class="table-light text-center"><tr><th>Tgl / Cabang</th><th>Jenis Transaksi</th><th>Nominal</th><th>Bank</th><th>Fee Bank</th><th>Pelanggan</th><th>Cuan</th></tr></thead>
+                    <tbody id="tabel-laporan" class="text-center"></tbody>
+                    <tfoot class="table-light fw-bold text-center">
+                      <tr><td colspan="3" class="text-end">TOTAL KESELURUHAN:</td><td id="lap-sum-bank" class="text-danger">Rp 0</td><td id="lap-sum-fee" style="color:#764ba2;">Rp 0</td><td id="lap-sum-biaya-pel" class="text-success">Rp 0</td><td id="lap-sum-cuan" style="color:#00529C;">Rp 0</td></tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-atur-profil" class="view-section">
+          <h4 class="fw-bold mb-4 text-dark"><i class="fa-solid fa-store" style="color:#F37021;"></i> Profil Toko</h4>
+          <div class="card border-0 shadow-sm rounded-3 w-100">
+            <div class="card-body">
+              <h6 class="fw-bold mb-3" style="color:#00529C;"><i class="fa-solid fa-shop"></i> Info Usaha Utama</h6>
+              <div class="mb-3"><label class="form-label small fw-bold">Nama Toko Utama</label><input type="text" id="set-nama" class="form-control"></div>
+              <div class="mb-3"><label class="form-label small fw-bold">Alamat Pusat</label><input type="text" id="set-alamat" class="form-control"></div>
+              <div class="mb-3"><label class="form-label small fw-bold">Kontak / WA Pusat</label><input type="text" id="set-kontak" class="form-control"></div>
+              <hr><h6 class="fw-bold mb-3" style="color:#00529C;"><i class="fa-solid fa-image"></i> Logo Usaha</h6>
+              <input type="file" id="upload-logo" accept="image/*" class="form-control mb-3">
+              <div class="text-center"><img id="image-workspace" src=""></div>
+              <button class="btn btn-warning w-100 mb-3 fw-bold" id="btn-crop" style="display:none;" onclick="prosesCrop()"><i class="fa-solid fa-crop"></i> Potong Logo</button>
+              <input type="hidden" id="set-url-lama">
+              <hr><h6 class="fw-bold mb-3 text-info"><i class="fa-solid fa-link"></i> Link Unduh (Opsional)</h6>
+              <div class="mb-3"><label class="form-label small fw-bold">Windows</label><input type="text" id="set-link-win" class="form-control"></div>
+              <div class="mb-3"><label class="form-label small fw-bold">Android</label><input type="text" id="set-link-and" class="form-control"></div>
+              <button class="btn w-100 py-3 fw-bold shadow text-white mt-3" style="background-color:#00529C;" onclick="simpanProfilKeServer()" id="btn-simpan-profil"><i class="fa-solid fa-save"></i> SIMPAN PROFIL TOKO</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <footer class="app-footer"><div class="container"><span class="fw-bold text-dark">eBuku Agenlink App</span> &copy; 2026 <span id="footer-nama-toko" class="fw-bold" style="color:#00529C;">Nama Toko</span>.<br><a href="#" onclick="event.preventDefault(); modalPrivasi()" class="text-decoration-none text-muted">Kebijakan Privasi</a> | Powered by: <span class="fw-bold text-dark"><a href='https://www.farypin-inovasiteknologi.com' rel='dofollow'>PT Farypin Inovasi Teknologi</a></span></div></footer>
+    </div> 
+  </div> 
+
+  <div class="bottom-nav" id="mobile-bottom-nav">
+    <div class="bottom-nav-item active menu-dashboard" onclick="pindahMenu('view-dashboard')"><i class="fa-solid fa-chart-pie"></i><span>Beranda</span></div>
+    <div class="bottom-nav-item menu-atur-tarif" onclick="pindahMenu('view-atur-tarif')"><i class="fa-solid fa-tags"></i><span>Tarif</span></div>
+    <div class="bottom-nav-item bottom-nav-center menu-transaksi" onclick="pindahMenu('view-transaksi')"><div class="circle"><i class="fa-solid fa-plus"></i></div><span style="font-weight:bold; color:white; display:block; margin-top:5px;">Transaksi</span></div>
+    <div class="bottom-nav-item menu-laporan" onclick="pindahMenu('view-laporan')"><i class="fa-solid fa-file-pdf"></i><span>Laporan</span></div>
+    <div class="bottom-nav-item menu-piutang" onclick="pindahMenu('view-piutang')"><i class="fa-solid fa-book-open"></i><span>Bon</span></div>
+  </div>
+
+  <div class="modal fade" id="modalAkun" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header text-white" style="background-color:#00529C;"><h5 class="modal-title fw-bold" id="modal-akun-title">Form Akun</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="bersihkanOverlay()"></button></div>
+        <div class="modal-body bg-light">
+          <form id="form-akun" onsubmit="event.preventDefault(); handleSimpanAkun();">
+            <input type="hidden" id="akun-user-lama" value="">
+            <div class="mb-3"><label class="form-label small fw-bold">Username</label><input type="text" id="akun-username" class="form-control border-primary" required></div>
+            <div class="mb-3"><label class="form-label small fw-bold">Email (U/ Lupa Password)</label><input type="email" id="akun-email" class="form-control"></div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold" id="label-pass-akun">Password</label>
+              <div class="input-group"><input type="password" id="akun-password" class="form-control" required><button class="btn btn-outline-secondary" type="button" onclick="togglePassword('akun-password', 'eye-icon-akun')"><i id="eye-icon-akun" class="fa-solid fa-eye"></i></button></div>
+            </div>
+            <div class="mb-3"><label class="form-label small fw-bold">Role Akses</label><select id="akun-role" class="form-select border-primary"><option value="Cabang">Kasir / Cabang (Akses Terbatas)</option><option value="Superadmin">Superadmin (Akses Penuh)</option></select></div>
+            <div class="mb-4"><label class="form-label small fw-bold">Nama Cabang (Cth: Cab. Sudirman)</label><input type="text" id="form-akun-cabang" class="form-control border-primary" required></div>
+            <button type="submit" class="btn w-100 py-2 fw-bold shadow-sm text-white" style="background-color:#00529C;" id="btn-simpan-akun-form"><i class="fa-solid fa-save"></i> Simpan Akun</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalTransaksi" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header text-white" style="background-color:#00529C;"><h5 class="modal-title fw-bold" id="modal-title-text">Form Transaksi</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="bersihkanOverlay()"></button></div>
+        <div class="modal-body bg-light">
+          <form id="form-transaksi" onsubmit="event.preventDefault(); handleTransaksi();">
+            <input type="hidden" id="trans-id" value=""><input type="hidden" id="trans-uid" value=""><input type="hidden" id="trans-sheet" value="Transaksi">
+            <div class="mb-3"><label class="form-label small fw-bold">Tanggal</label><input type="date" id="trans-tanggal" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label small fw-bold">Jenis Transaksi</label>
+              <select id="trans-jenis" class="form-select border-primary" required onchange="cekAutoTarif()">
+                <option value="">Pilih...</option>
+                <option value="Tarik Tunai">Tarik Tunai</option>
+                <option value="Transfer Sesama BRI">Transfer Sesama BRI</option>
+                <option value="Transfer Bank Lain">Transfer Bank Lain</option>
+                <option value="Bayar Tagihan/Briva">Bayar Tagihan/Briva</option>
+                <option value="Top Up E-Wallet">Top Up E-Wallet</option>
+                <option value="Jasa Transfer Sesama">Jasa Transfer (Rek. Pelanggan) Sesama BRI</option>
+                  <option value="Jasa Transfer Bank Lain">Jasa Transfer (Rek. Pelanggan) Bank Lain</option>
+              </select>
+            </div>
+            <div class="mb-3"><label class="form-label small fw-bold">Nominal Transaksi (Rp)</label><input type="text" inputmode="numeric" id="trans-nominal" class="form-control border-primary form-control-lg fw-bold" style="color:#00529C;" required oninput="formatInputUang(event)"></div>
+            <div class="row">
+              <div class="col-4 mb-3"><label class="form-label small fw-bold">Adm Bank</label><input type="text" id="trans-admin-bank" class="form-control bg-white text-danger fw-bold" required readonly placeholder="Auto"></div>
+              <div class="col-4 mb-3"><label class="form-label small fw-bold text-info" style="color:#764ba2 !important;">Fee Bank</label><input type="text" id="trans-fee-bank" class="form-control bg-white fw-bold" style="color:#764ba2 !important;" readonly placeholder="Auto"></div>
+              <div class="col-4 mb-3"><label class="form-label small fw-bold text-success">Pelanggan</label><input type="text" id="trans-biaya-pelanggan" class="form-control bg-white fw-bold text-success" required readonly placeholder="Auto"></div>
+            </div>
+            <button type="submit" class="btn w-100 py-2 fw-bold shadow-sm text-white" style="background-color:#00529C;" id="btn-transaksi"><i class="fa-solid fa-check"></i> Simpan Data</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalBon" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header text-white" style="background-color:#F37021;"><h5 class="modal-title fw-bold" id="modal-bon-title"><i class="fa-solid fa-book-open"></i> Form Catatan Bon</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="bersihkanOverlay()"></button></div>
+        <div class="modal-body bg-light">
+          <form id="form-bon" onsubmit="event.preventDefault(); handleBon();">
+            <input type="hidden" id="bon-id" value=""><input type="hidden" id="bon-uid" value="">
+            <div class="mb-3"><label class="form-label small fw-bold">Tanggal Bon</label><input type="date" id="bon-tanggal" class="form-control" required></div>
+            <div class="mb-3"><label class="form-label small fw-bold">Nama Pelanggan (Penghutang)</label><input type="text" id="bon-nama" class="form-control" style="border-color:#F37021;" required></div>
+            <div class="mb-3"><label class="form-label small fw-bold">Nominal Bon (Rp)</label><input type="text" inputmode="numeric" id="bon-nominal" class="form-control form-control-lg fw-bold text-dark" style="border-color:#F37021;" required oninput="formatInputUang(event)"></div>
+            <button type="submit" class="btn w-100 py-2 fw-bold shadow-sm text-white" style="background-color:#F37021;" id="btn-bon"><i class="fa-solid fa-save"></i> Simpan Bon</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="area-cetak-bon" style="background: white; padding: 15px; width: 100%; display: none;">
+    <div class="text-center mb-4"><h5 class="fw-bold mb-1 text-dark" style="text-decoration: underline;">LAPORAN CATATAN BON (PIUTANG)</h5><small class="fw-bold" style="color:#F37021;" id="pdf-bon-toko">NAMA TOKO</small></div>
+    <table class="table table-bordered table-sm mb-4" style="color: black; border-color: #000 !important;"><thead class="table-light text-center"><tr><th>Tgl/Cabang</th><th>Nama Pelanggan</th><th>Nominal</th><th>Status</th><th>Tgl Lunas</th></tr></thead>
+      <tbody id="tabel-laporan-bon" class="text-center"></tbody>
+      <tfoot class="table-light fw-bold text-center"><tr><td colspan="2" class="text-end">TOTAL BELUM LUNAS:</td><td id="bon-sum-belum" class="text-danger">Rp 0</td><td colspan="2"></td></tr></tfoot>
+    </table>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <script>
+    // =========================================================================
+    // WAJIB: GANTI TULISAN DI BAWAH DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+    // =========================================================================
+    const API_URL = "https://script.google.com/a/macros/admin.sma.belajar.id/s/AKfycbwerw8_4Zu9O6MXoHBhnxZLSxIxLeuw_86RmDUUzY8lwtul4Ve_63ODZfIg8YPR2WOP4g/exec"; 
+
+    function callAPI(actionName, payloadData) {
+      return fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: actionName, ...payloadData })
+      })
+      .then(async response => {
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text);
+          if (data.status === 'success') return data.data;
+          else throw new Error(data.message);
+        } catch (e) {
+          console.error("Error Sistem:", text);
+          throw new Error("Server menolak koneksi. Pastikan URL sudah benar dan akses di-set ke Siapa saja.");
+        }
+      });
+    }
+
+    let cropper, croppedBase64 = null; 
+    let dataSemua = [], dataTampil = [], listTarifGlobal = [], dataPiutang = [], globalListAkun = []; 
+    let currentPage = 1; const rowsPerPage = 10; let chartInstance = null;
+
+    function formatInputUang(e) { let val = e.target.value.replace(/[^0-9]/g, ''); if(val !== '') { e.target.value = parseInt(val, 10).toLocaleString('id-ID'); } else { e.target.value = ''; } if(e.target.id === 'trans-nominal' || e.target.id === 'trans-jenis') cekAutoTarif(); }
+    function unformatUang(val) { if(!val) return 0; return parseFloat(String(val).replace(/\./g, '')) || 0; }
+    const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+    const formatTglPendek = (tglStr) => { const d = new Date(tglStr); return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`; };
+    
+    function bersihkanOverlay() { document.body.className = ''; document.body.style = ''; document.querySelectorAll('.modal-backdrop').forEach(el => el.remove()); if (typeof Swal !== 'undefined') Swal.close(); }
+    function togglePassword(inputId, iconId) { const input = document.getElementById(inputId); const icon = document.getElementById(iconId); if(!input || !icon) return; if (input.type === "password") { input.type = "text"; icon.classList.remove("fa-eye"); icon.classList.add("fa-eye-slash"); } else { input.type = "password"; icon.classList.remove("fa-eye-slash"); icon.classList.add("fa-eye"); } }
+
+    function tampilkanLoading(pesan) {
+      let timerInterval;
+      Swal.fire({
+        title: pesan, html: 'Memproses dalam <b>5</b> detik...', timer: 5000, timerProgressBar: true, allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); const b = Swal.getHtmlContainer().querySelector('b'); timerInterval = setInterval(() => { const left = Math.ceil(Swal.getTimerLeft() / 1000); if(b) b.textContent = left > 0 ? left : 0; }, 1000); },
+        willClose: () => { clearInterval(timerInterval); }
+      });
+    }
+
+    window.onload = function() {
+      if(API_URL.includes("ISI_DENGAN_URL")) { document.getElementById('loading-screen').innerHTML = '<h5 class="text-danger p-4 text-center">ERROR: URL API belum dimasukkan di kode HTML.</h5>'; return; }
+      callAPI('getProfilApp', {}).then(data => {
+        if(document.getElementById('login-nama-toko')) document.getElementById('login-nama-toko').innerText = data.namaToko || 'eBuku Agenlink'; 
+        if(document.getElementById('login-footer-toko')) document.getElementById('login-footer-toko').innerText = data.namaToko || ''; 
+        if(document.getElementById('login-logo')) document.getElementById('login-logo').src = data.urlLogo;
+        const btnWin = document.getElementById('btn-dl-win'), btnAnd = document.getElementById('btn-dl-and');
+        if(data.linkWindows && btnWin) { btnWin.href = data.linkWindows; btnWin.style.display = 'inline-block'; document.getElementById('area-download').style.display = 'block'; }
+        if(data.linkAndroid && btnAnd) { btnAnd.href = data.linkAndroid; btnAnd.style.display = 'inline-block'; document.getElementById('area-download').style.display = 'block'; }
+        document.getElementById('loading-screen').style.display = 'none'; 
+        
+        if(localStorage.getItem('bukuLinkLoggedIn') === 'true') { 
+            document.getElementById('view-login').style.display = 'none'; document.getElementById('app-wrapper').style.display = 'flex'; 
+            document.body.classList.add('is-logged-in'); 
+            terapkanRoleAkses(); pindahMenu('view-dashboard'); muatDashboard(false); 
+        } else { document.getElementById('view-login').style.display = 'flex'; document.body.classList.remove('is-logged-in'); }
+      }).catch(err => { document.getElementById('loading-screen').style.display = 'none'; Swal.fire('Koneksi Terputus', err.message, 'error'); });
+    };
+
+    function handleLogin() { 
+        const u = document.getElementById('login-username').value, p = document.getElementById('login-password').value, btn = document.getElementById('btn-login'); 
+        if(!u || !p) { Swal.fire('Perhatian', 'Username dan Password tidak boleh kosong!', 'warning'); return; } 
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memeriksa...'; btn.disabled = true; 
+        callAPI('prosesLogin', { username: u, password: p }).then(res => {
+            btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Masuk Aplikasi'; btn.disabled = false; 
+            if(res && res.valid) { 
+                localStorage.setItem('bukuLinkLoggedIn', 'true'); localStorage.setItem('bukuLinkRole', res.role); localStorage.setItem('bukuLinkCabang', res.cabang); localStorage.setItem('bukuLinkUser', res.username);
+                try { setTimeout(() => { bersihkanOverlay(); document.getElementById('view-login').style.display = 'none'; document.getElementById('app-wrapper').style.display = 'flex'; document.body.classList.add('is-logged-in'); terapkanRoleAkses(); pindahMenu('view-dashboard'); muatDashboard(false); }, 300); } catch(e) { window.location.reload(); }
+            } else Swal.fire('Gagal', 'Username/Password salah!', 'error'); 
+        }).catch(err => { btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Masuk Aplikasi'; btn.disabled = false; Swal.fire('Error', err.message, 'error'); });
+    }
+    
+    function logout() { localStorage.removeItem('bukuLinkLoggedIn'); localStorage.removeItem('bukuLinkRole'); localStorage.removeItem('bukuLinkCabang'); localStorage.removeItem('bukuLinkUser'); document.getElementById('app-wrapper').style.display = 'none'; document.getElementById('view-login').style.display = 'flex'; document.body.classList.remove('is-logged-in'); bersihkanOverlay(); }
+    
+    function terapkanRoleAkses() {
+      const userRole = localStorage.getItem('bukuLinkRole') || 'Cabang', userCabang = localStorage.getItem('bukuLinkCabang') || 'Pusat', userL = localStorage.getItem('bukuLinkUser') || '';
+      const labelRole = document.getElementById('label-role');
+      if(labelRole) labelRole.innerText = userRole === 'Superadmin' ? 'Superadmin' : `Cabang: ${userCabang}`;
+      
+      if(userRole !== 'Superadmin') {
+         document.querySelectorAll('.menu-atur-tarif, .menu-atur-profil, .btn-profil-mobile').forEach(el => el.style.display = 'none');
+         document.querySelectorAll('.area-filter-cabang').forEach(el => el.style.display = 'none');
+         document.getElementById('akun-superadmin').style.display = 'none'; document.getElementById('akun-cabang').style.display = 'block';
+         document.getElementById('cabang-saya-info').value = userCabang; document.getElementById('username-saya-info').value = userL;
+      } else {
+         document.querySelectorAll('.menu-atur-tarif, .menu-atur-profil, .btn-profil-mobile').forEach(el => el.style.display = 'inline-block');
+         document.querySelectorAll('.area-filter-cabang').forEach(el => el.style.display = 'block');
+         document.getElementById('akun-superadmin').style.display = 'block'; document.getElementById('akun-cabang').style.display = 'none';
+      }
+    }
+
+    function reloadDataApp() { 
+      const icon = document.getElementById('ikon-reload'); icon.classList.add('fa-spin'); 
+      const statusArsip = document.getElementById('toggle-arsip') ? document.getElementById('toggle-arsip').checked : false; 
+      const role = localStorage.getItem('bukuLinkRole') || 'Cabang'; const cabang = localStorage.getItem('bukuLinkCabang') || 'Pusat'; 
+      
+      tampilkanLoading('Memuat Data Terbaru...');
+      callAPI('getDashboardData', { muatArsip: statusArsip, role: role, cabang: cabang }).then(data => { 
+        icon.classList.remove('fa-spin'); 
+        Swal.close();
+        prosesTampilDashboard(data); 
+        Swal.fire({ title: 'Data Diperbarui!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 }); 
+      }).catch(err => { icon.classList.remove('fa-spin'); Swal.close(); Swal.fire('Error', 'Gagal memuat ulang data', 'error'); }); 
+    }
+    
+    function modalLupaPassword() { Swal.fire({ title: 'Lupa Password?', text: "Masukkan Email Anda yang terdaftar.", input: 'email', inputPlaceholder: 'email@anda.com', showCancelButton: true, confirmButtonText: 'Kirim Sandi Baru', showLoaderOnConfirm: true, preConfirm: (email) => { return callAPI('lupaPassword', {emailInput: email}).then(res => { if(!res) Swal.showValidationMessage('Email tidak terdaftar di database!'); return res; }); }, allowOutsideClick: () => !Swal.isLoading() }).then((result) => { if (result.isConfirmed && result.value) { Swal.fire('Terkirim!', 'Cek Kotak Masuk atau Folder Spam di email Anda.', 'success'); } }); }
+    function modalPrivasi() { const teksPrivasi = `<div style="text-align: left; font-size: 14px; line-height: 1.6; color: #333;"><p><strong>1. Pengumpulan Data</strong><br>Kami mengumpulkan data transaksi dan informasi profil yang Anda masukkan secara mandiri ke dalam aplikasi. Kami tidak mengambil data pribadi dari perangkat Anda secara diam-diam.</p><p><strong>2. Penggunaan Data</strong><br>Seluruh data yang tersimpan sepenuhnya digunakan untuk keperluan operasional Anda, termasuk pencatatan, kalkulasi keuangan, dan pembuatan laporan.</p><p><strong>3. Keamanan Data</strong><br>Kami menggunakan sistem keamanan enkripsi berstandar industri (SHA-256) untuk melindungi kata sandi Anda. Data mentah Anda tersimpan secara aman di dalam ekosistem Google Workspace milik Anda sendiri.</p><p><strong>4. Hak Pengguna</strong><br>Anda memegang kendali penuh atas data Anda. Anda dapat menambah, mengedit, menghapus, maupun mengunduh laporan data Anda kapan saja melalui fitur yang telah disediakan di dalam aplikasi.</p><hr><p class="text-muted text-center" style="font-size: 12px;"><em>Dengan menggunakan aplikasi ini, Anda menyetujui ketentuan pemrosesan data sebagaimana dijelaskan di atas.</em></p></div>`; Swal.fire({ title: 'Kebijakan Privasi', html: teksPrivasi, icon: 'info', confirmButtonText: 'Saya Mengerti', confirmButtonColor: '#00529C' }); }
+
+    function pindahMenu(viewId) { document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none'); document.getElementById(viewId).style.display = 'block'; const menuClass = viewId.replace('view-', 'menu-'); document.querySelectorAll('#sidebar .nav-link').forEach(el => el.classList.remove('active')); const deskMenu = document.querySelector('#sidebar .nav-link.' + menuClass); if(deskMenu) deskMenu.classList.add('active'); document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active')); const mobMenu = document.querySelector('.bottom-nav-item.' + menuClass); if(mobMenu) mobMenu.classList.add('active'); if(viewId === 'view-laporan') prosesLaporan(); window.scrollTo(0,0); }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('show-sidebar'); }
+    function toggleModeArsip(clickedId) { const isChecked = document.getElementById(clickedId).checked; document.getElementById('toggle-arsip').checked = isChecked; document.getElementById('toggle-arsip-lap').checked = isChecked; document.getElementById('tabel-riwayat').innerHTML = '<tr><td colspan="8">Memuat database...</td></tr>'; muatDashboard(isChecked); }
+
+    function muatDashboard(muatArsip = false) { 
+        const role = localStorage.getItem('bukuLinkRole') || 'Cabang'; 
+        const cabang = localStorage.getItem('bukuLinkCabang') || 'Pusat'; 
+        callAPI('getDashboardData', { muatArsip: muatArsip, role: role, cabang: cabang }).then(data => { prosesTampilDashboard(data); }); 
+    }
+
+    function prosesTampilDashboard(data) {
+        if(document.getElementById('sidebar-nama-toko')) document.getElementById('sidebar-nama-toko').innerText = data.profil.namaToko; 
+        if(document.getElementById('sidebar-logo-img')) document.getElementById('sidebar-logo-img').src = data.profil.urlLogo; 
+        if(document.getElementById('mobile-nama-toko')) document.getElementById('mobile-nama-toko').innerText = data.profil.namaToko; 
+        if(document.getElementById('mobile-logo-img')) document.getElementById('mobile-logo-img').src = data.profil.urlLogo; 
+        if(document.getElementById('footer-nama-toko')) document.getElementById('footer-nama-toko').innerText = data.profil.namaToko; 
+        if(document.getElementById('pdf-nama-toko')) document.getElementById('pdf-nama-toko').innerText = data.profil.namaToko; 
+        if(document.getElementById('pdf-alamat')) document.getElementById('pdf-alamat').innerText = data.profil.alamat; 
+        if(document.getElementById('pdf-logo')) document.getElementById('pdf-logo').src = data.profil.urlLogo; 
+        if(document.getElementById('pdf-bon-toko')) document.getElementById('pdf-bon-toko').innerText = data.profil.namaToko;
+        
+        if(document.getElementById('set-nama')) document.getElementById('set-nama').value = data.profil.namaToko; 
+        if(document.getElementById('set-alamat')) document.getElementById('set-alamat').value = data.profil.alamat; 
+        if(document.getElementById('set-kontak')) document.getElementById('set-kontak').value = data.profil.kontak; 
+        if(document.getElementById('set-url-lama')) document.getElementById('set-url-lama').value = data.profil.urlLogo; 
+        if(document.getElementById('set-link-win')) document.getElementById('set-link-win').value = data.profil.linkWindows; 
+        if(document.getElementById('set-link-and')) document.getElementById('set-link-and').value = data.profil.linkAndroid; 
+        
+        dataSemua = data.riwayat; listTarifGlobal = data.listTarif; dataPiutang = data.piutang; globalListAkun = data.listAkun || [];
+        
+        if(localStorage.getItem('bukuLinkRole') === 'Superadmin') {
+           const cabangList = [...new Set(dataSemua.map(item => item.cabang))].filter(c => c && c !== 'undefined');
+           let optCabang = '<option value="">Semua Cabang</option>';
+           cabangList.forEach(c => { optCabang += `<option value="${c}">${c}</option>`; });
+           if(document.getElementById('filter-cabang')) document.getElementById('filter-cabang').innerHTML = optCabang;
+           if(document.getElementById('lap-cabang')) document.getElementById('lap-cabang').innerHTML = optCabang;
+           renderTabelAkun();
+        }
+
+        const dataAktif = dataSemua.filter(x => x.sheetName === 'Transaksi');
+        
+        const tglSekarang = new Date();
+        const dStr = tglSekarang.getFullYear() + "-" + String(tglSekarang.getMonth()+1).padStart(2,'0') + "-" + String(tglSekarang.getDate()).padStart(2,'0');
+        const dataHariIni = dataAktif.filter(x => x.tanggal.startsWith(dStr));
+
+        if(document.getElementById('dash-trx')) document.getElementById('dash-trx').innerText = dataHariIni.length; 
+        if(document.getElementById('dash-cuan')) document.getElementById('dash-cuan').innerText = formatRp(dataHariIni.reduce((a,c)=>a+c.untung,0)); 
+        
+        // TETAP DIHITUNG NAMUN HANYA UNTUK KEPERLUAN INTERNAL ATAU LAPORAN
+        if(document.getElementById('dash-nom')) document.getElementById('dash-nom').innerText = formatRp(dataAktif.reduce((a,c)=>a+c.nominal,0)); 
+        if(document.getElementById('dash-bank')) document.getElementById('dash-bank').innerText = formatRp(dataAktif.reduce((a,c)=>a+c.adminBank,0)); 
+        if(document.getElementById('dash-pel')) document.getElementById('dash-pel').innerText = formatRp(dataAktif.reduce((a,c)=>a+c.biayaPel,0)); 
+        if(document.getElementById('dash-fee')) document.getElementById('dash-fee').innerText = formatRp(dataAktif.reduce((a,c)=>a+c.feeBank,0)); 
+        
+        terapkanFilter(); renderTabelSetupTarif(); renderGrafik(dataAktif); renderTabelBon();
+    }
+
+    function renderTabelAkun() { let html = ''; if(globalListAkun.length === 0) html = '<tr><td colspan="5">Data kosong</td></tr>'; else { globalListAkun.forEach(a => { let stBadge = a.role === 'Superadmin' ? `<span class="badge bg-danger">Superadmin</span>` : `<span class="badge bg-info">Cabang</span>`; html += `<tr><td class="fw-bold">${a.username}</td><td>${a.email}</td><td>${stBadge}</td><td>${a.cabang}</td><td><button class="btn btn-warning btn-sm py-0 px-1 mb-1 me-1" onclick="bukaModalAkunEdit('${a.username}')"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm py-0 px-1 mb-1" onclick="hapusAkun('${a.username}')"><i class="fa-solid fa-trash"></i></button></td></tr>`; }); } document.getElementById('tabel-akun').innerHTML = html; }
+    function bukaModalAkunTambah() { document.getElementById('form-akun').reset(); document.getElementById('akun-user-lama').value = ""; document.getElementById('form-akun-cabang').value = ""; document.getElementById('modal-akun-title').innerText = 'Tambah Akun Baru'; document.getElementById('akun-username').readOnly = false; document.getElementById('label-pass-akun').innerText = 'Password (Wajib)'; document.getElementById('akun-password').required = true; new bootstrap.Modal(document.getElementById('modalAkun')).show(); }
+    function bukaModalAkunEdit(username) { const data = globalListAkun.find(x => x.username === username); if(!data) return; document.getElementById('akun-user-lama').value = data.username; document.getElementById('akun-username').value = data.username; document.getElementById('akun-username').readOnly = true; document.getElementById('akun-email').value = data.email; document.getElementById('akun-role').value = data.role; document.getElementById('form-akun-cabang').value = data.cabang; document.getElementById('label-pass-akun').innerText = 'Ganti Password (Opsional)'; document.getElementById('akun-password').value = ''; document.getElementById('akun-password').required = false; document.getElementById('modal-akun-title').innerText = 'Edit Akun'; new bootstrap.Modal(document.getElementById('modalAkun')).show(); }
+    
+    function handleSimpanAkun() { const btn = document.getElementById('btn-simpan-akun-form'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...'; btn.disabled = true; const userLama = document.getElementById('akun-user-lama').value; const dataA = { username: document.getElementById('akun-username').value, email: document.getElementById('akun-email').value, password: document.getElementById('akun-password').value, role: document.getElementById('akun-role').value, cabang: document.getElementById('form-akun-cabang').value }; const aksi = userLama === "" ? 'simpanAkun' : 'editAkun'; tampilkanLoading('Menyimpan Akun...'); callAPI(aksi, { userLama: userLama, data: dataA }).then(() => { const modalObj = bootstrap.Modal.getInstance(document.getElementById('modalAkun')); if(modalObj) modalObj.hide(); Swal.close(); setTimeout(bersihkanOverlay, 300); btn.innerHTML = '<i class="fa-solid fa-save"></i> Simpan Akun'; btn.disabled = false; Swal.fire('Tersimpan!', 'Data akun diperbarui.', 'success'); reloadDataApp(); }).catch(err => { Swal.close(); btn.innerHTML = '<i class="fa-solid fa-save"></i> Simpan Akun'; btn.disabled = false; Swal.fire('Error', err.message, 'error'); }); }
+    function hapusAkun(username) { if(username === localStorage.getItem('bukuLinkUser')) return Swal.fire('Ditolak', 'Anda tidak bisa menghapus akun Anda sendiri saat sedang login!', 'error'); Swal.fire({ title: 'Hapus Akun?', text: "Akun ini tidak akan bisa login lagi.", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus' }).then((res) => { if (res.isConfirmed) { tampilkanLoading('Menghapus Akun...'); callAPI('hapusAkun', {username: username}).then(()=> { Swal.close(); reloadDataApp(); }); } }); }
+    function simpanPasswordCabang() { const pass = document.getElementById('set-password-cabang').value; const userL = localStorage.getItem('bukuLinkUser'); if(!pass || pass.trim() === '') return Swal.fire('Oops', 'Password tidak boleh kosong!', 'warning'); const btn = document.getElementById('btn-simpan-pass-cabang'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading...'; btn.disabled = true; tampilkanLoading('Update Password...'); callAPI('gantiPasswordCabang', { username: userL, passwordBaru: pass }).then(() => { Swal.close(); btn.innerHTML = '<i class="fa-solid fa-save"></i> UPDATE PASSWORD'; btn.disabled = false; document.getElementById('set-password-cabang').value = ''; Swal.fire('Sukses', 'Password Anda berhasil diubah!', 'success'); }).catch(err => { Swal.close(); btn.innerHTML = '<i class="fa-solid fa-save"></i> UPDATE PASSWORD'; btn.disabled = false; Swal.fire('Error', err.message, 'error'); }); }
+
+    function renderGrafik(dataGrafik) { const ctx = document.getElementById('chartKeuntungan')?.getContext('2d'); if(!ctx) return; if(chartInstance) chartInstance.destroy(); const groupedData = {}; dataGrafik.forEach(r => { if(!groupedData[r.tanggal]) groupedData[r.tanggal] = 0; groupedData[r.tanggal] += r.untung; }); const sortedDates = Object.keys(groupedData).sort().slice(-7); const labels = sortedDates.map(d => formatTglPendek(d)); const chartData = sortedDates.map(d => groupedData[d]); chartInstance = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ label: 'Keuntungan (Rp)', data: chartData, backgroundColor: 'rgba(0, 82, 156, 0.2)', borderColor: '#00529C', borderWidth: 3, pointBackgroundColor: '#fff', pointBorderColor: '#00529C', pointRadius: 5, fill: true, tension: 0.3 }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } }); }
+
+    function terapkanFilter() { const jenis = document.getElementById('filter-jenis').value, start = document.getElementById('filter-start').value, end = document.getElementById('filter-end').value; const filterCabang = document.getElementById('filter-cabang') ? document.getElementById('filter-cabang').value : ''; const stTime = start ? new Date(start).setHours(0,0,0,0) : null, enTime = end ? new Date(end).setHours(23,59,59,999) : null; dataTampil = dataSemua.filter(r => { let pass = true; if (jenis && r.jenis !== jenis) pass = false; if (filterCabang && r.cabang !== filterCabang) pass = false; const rTime = new Date(r.tanggal).getTime(); if (stTime && rTime < stTime) pass = false; if (enTime && rTime > enTime) pass = false; return pass; }); currentPage = 1; renderTabel(); }
+
+    function renderTabel() { 
+      const startIdx = (currentPage - 1) * rowsPerPage, endIdx = startIdx + rowsPerPage; const dataPage = dataTampil.slice(startIdx, endIdx); let htmlTabel = ''; const role = localStorage.getItem('bukuLinkRole'), cabangSaya = localStorage.getItem('bukuLinkCabang'); if(dataPage.length === 0) htmlTabel = '<tr><td colspan="8" class="text-muted">Data kosong</td></tr>'; else dataPage.forEach(r => { const badgeArsip = r.sheetName === 'Arsip' ? '<br><span class="badge-arsip">Arsip</span>' : ''; let tombolAksi = `<span class="badge bg-secondary" style="font-size:10px;">Akses Terbatas</span>`; if(role === 'Superadmin' || r.cabang === cabangSaya) { tombolAksi = `<button class="btn btn-warning btn-sm py-0 px-1 mb-1" onclick="bukaModalEdit('${r.uid}', ${r.idRow}, '${r.sheetName}')"><i class="fa-solid fa-pen"></i></button> <button class="btn btn-danger btn-sm py-0 px-1 mb-1" onclick="hapusData('${r.uid}', ${r.idRow}, '${r.sheetName}')"><i class="fa-solid fa-trash"></i></button>`; } htmlTabel += `<tr><td>${formatTglPendek(r.tanggal)}<br><small class="text-muted">${r.cabang}</small>${badgeArsip}</td><td class="text-truncate" style="max-width:80px;">${r.jenis}</td><td>${formatRp(r.nominal)}</td><td class="text-danger">-${formatRp(r.adminBank)}</td><td style="color:#764ba2 !important;">+${formatRp(r.feeBank)}</td><td class="text-success">+${formatRp(r.biayaPel)}</td><td class="fw-bold" style="color:#00529C;">${formatRp(r.untung)}</td><td>${tombolAksi}</td></tr>`; }); if(document.getElementById('tabel-riwayat')) document.getElementById('tabel-riwayat').innerHTML = htmlTabel; let pageHtml = ''; const totalPages = Math.ceil(dataTampil.length / rowsPerPage); for (let i = 1; i <= totalPages; i++) pageHtml += `<li class="page-item ${i === currentPage ? 'active' : ''}"><button class="page-link" onclick="gantiHalaman(${i})">${i}</button></li>`; if(document.getElementById('pagination-container')) document.getElementById('pagination-container').innerHTML = pageHtml; 
+      
+      // PERBAIKAN: Penjumlahan Tabel Transaksi 
+      if(document.getElementById('sum-trx')) document.getElementById('sum-trx').innerText = dataTampil.length; 
+      if(document.getElementById('sum-adm')) document.getElementById('sum-adm').innerText = formatRp(dataTampil.reduce((a, c) => a + c.adminBank, 0)); 
+      if(document.getElementById('sum-fee-bank')) document.getElementById('sum-fee-bank').innerText = formatRp(dataTampil.reduce((a, c) => a + c.feeBank, 0)); 
+      if(document.getElementById('sum-biaya-pel')) document.getElementById('sum-biaya-pel').innerText = formatRp(dataTampil.reduce((a, c) => a + c.biayaPel, 0)); 
+      if(document.getElementById('sum-cuan')) document.getElementById('sum-cuan').innerText = formatRp(dataTampil.reduce((a, c) => a + c.untung, 0)); 
+    }
+    function gantiHalaman(page) { currentPage = page; renderTabel(); }
+
+    function cekAutoTarif() { const jenis = document.getElementById('trans-jenis').value; const nom = unformatUang(document.getElementById('trans-nominal').value); const inputBiaya = document.getElementById('trans-biaya-pelanggan'); const inputAdmBank = document.getElementById('trans-admin-bank'); const inputFeeBank = document.getElementById('trans-fee-bank'); if(!jenis || nom === 0) { inputBiaya.value = ''; inputAdmBank.value = ''; inputFeeBank.value = ''; return; } const match = listTarifGlobal.find(t => t.jenis === jenis && nom >= t.min && nom <= t.max); if (match) { inputBiaya.value = match.tarif.toLocaleString('id-ID'); inputAdmBank.value = match.admBank.toLocaleString('id-ID'); inputFeeBank.value = match.feeBank.toLocaleString('id-ID'); } else { inputBiaya.value = ''; inputAdmBank.value = ''; inputFeeBank.value = ''; } }
+    function bukaModalTambah() { document.getElementById('form-transaksi').reset(); document.getElementById('trans-id').value = ""; document.getElementById('trans-uid').value = ""; document.getElementById('trans-sheet').value = "Transaksi"; document.getElementById('modal-title-text').innerText = 'Tambah Transaksi'; document.getElementById('trans-tanggal').valueAsDate = new Date(); new bootstrap.Modal(document.getElementById('modalTransaksi')).show(); }
+    function bukaModalEdit(uid, idRow, sheetName) { const data = dataSemua.find(x => x.idRow === idRow && x.sheetName === sheetName); if(!data) return; document.getElementById('trans-id').value = data.idRow; document.getElementById('trans-uid').value = data.uid; document.getElementById('trans-sheet').value = data.sheetName; document.getElementById('modal-title-text').innerText = 'Edit Data (' + data.sheetName + ')'; document.getElementById('trans-tanggal').value = data.tanggal; document.getElementById('trans-jenis').value = data.jenis; document.getElementById('trans-nominal').value = data.nominal.toLocaleString('id-ID'); document.getElementById('trans-admin-bank').value = data.adminBank.toLocaleString('id-ID'); document.getElementById('trans-fee-bank').value = data.feeBank.toLocaleString('id-ID'); document.getElementById('trans-biaya-pelanggan').value = data.biayaPel.toLocaleString('id-ID'); new bootstrap.Modal(document.getElementById('modalTransaksi')).show(); }
+    
+    function handleTransaksi() { 
+      const btn = document.getElementById('btn-transaksi'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...'; btn.disabled = true; 
+      const idRow = document.getElementById('trans-id').value, uid = document.getElementById('trans-uid').value, sheetName = document.getElementById('trans-sheet').value; 
+      const userCabang = localStorage.getItem('bukuLinkCabang') || 'Pusat'; 
+      const dataTrans = { tanggal: document.getElementById('trans-tanggal').value, jenis: document.getElementById('trans-jenis').value, nominal: unformatUang(document.getElementById('trans-nominal').value), adminBank: unformatUang(document.getElementById('trans-admin-bank').value), feeBank: unformatUang(document.getElementById('trans-fee-bank').value), biayaPelanggan: unformatUang(document.getElementById('trans-biaya-pelanggan').value), cabang: userCabang }; 
+      const aksi = idRow === "" ? 'simpanTransaksi' : 'editTransaksi'; 
+      
+      tampilkanLoading('Menyimpan Transaksi...');
+      callAPI(aksi, { uid: uid, idRowLama: idRow, data: dataTrans, namaSheet: sheetName }).then(() => { 
+          Swal.close();
+          fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({action: 'jalankanArsip'})});
+          selesaiSimpan(); 
+      }).catch(err => { Swal.close(); btn.innerHTML = '<i class="fa-solid fa-check"></i> Simpan Data'; btn.disabled = false; Swal.fire('Error', err.message, 'error'); });
+    }
+    
+    function selesaiSimpan() { const modalObj = bootstrap.Modal.getInstance(document.getElementById('modalTransaksi')); if(modalObj) modalObj.hide(); setTimeout(bersihkanOverlay, 300); document.getElementById('btn-transaksi').innerHTML = '<i class="fa-solid fa-check"></i> Simpan Data'; document.getElementById('btn-transaksi').disabled = false; Swal.fire({ icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false }); muatDashboard(document.getElementById('toggle-arsip').checked); }
+    function hapusData(uid, idRow, sheetName) { Swal.fire({ title: 'Hapus Data?', text: "Menghapus dari " + sheetName, icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus' }).then((res) => { if (res.isConfirmed) { tampilkanLoading('Menghapus Data...'); callAPI('hapusTransaksi', {uid: uid, idRowLama: idRow, namaSheet: sheetName}).then(()=> { Swal.close(); muatDashboard(document.getElementById('toggle-arsip').checked); }); } }); }
+
+    function renderTabelBon() { let html = ''; let htmlPDF = ''; let totalBelum = 0; if(dataPiutang.length === 0) { html = '<tr><td colspan="6">Belum ada bon</td></tr>'; htmlPDF = html; } else { dataPiutang.forEach(b => { let stBadge = b.status === 'Lunas' ? `<span class="badge bg-success">Lunas</span>` : `<span class="badge bg-danger">Belum Lunas</span>`; let btnLunas = b.status === 'Lunas' ? '' : `<button class="btn btn-success btn-sm py-0 px-1 mb-1 me-1" onclick="lunasiBon('${b.uid}', ${b.idRow})" title="Tandai Lunas"><i class="fa-solid fa-check"></i></button>`; let tglLnsStr = b.status === 'Lunas' ? formatTglPendek(b.tglLunas) : '-'; if(b.status !== 'Lunas') totalBelum += b.nominal; html += `<tr><td>${formatTglPendek(b.tanggal)}<br><small class="text-muted">${b.cabang || 'Pusat'}</small></td><td>${b.nama}</td><td class="fw-bold">${formatRp(b.nominal)}</td><td>${stBadge}</td><td>${tglLnsStr}</td><td>${btnLunas}<button class="btn btn-warning btn-sm py-0 px-1 mb-1 me-1" onclick="bukaModalBonEdit('${b.uid}', ${b.idRow})"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm py-0 px-1 mb-1" onclick="hapusBon('${b.uid}', ${b.idRow})"><i class="fa-solid fa-trash"></i></button></td></tr>`; htmlPDF += `<tr><td>${formatTglPendek(b.tanggal)}<br><small class="text-muted">${b.cabang || 'Pusat'}</small></td><td>${b.nama}</td><td class="fw-bold">${formatRp(b.nominal)}</td><td>${b.status}</td><td>${tglLnsStr}</td></tr>`; }); } if(document.getElementById('tabel-bon')) document.getElementById('tabel-bon').innerHTML = html; if(document.getElementById('tabel-laporan-bon')) document.getElementById('tabel-laporan-bon').innerHTML = htmlPDF; if(document.getElementById('bon-sum-belum')) document.getElementById('bon-sum-belum').innerText = formatRp(totalBelum); }
+    function bukaModalBonTambah() { document.getElementById('form-bon').reset(); document.getElementById('bon-id').value = ""; document.getElementById('bon-uid').value = ""; document.getElementById('modal-bon-title').innerHTML = '<i class="fa-solid fa-book-open"></i> Tambah Bon Baru'; document.getElementById('bon-tanggal').valueAsDate = new Date(); new bootstrap.Modal(document.getElementById('modalBon')).show(); }
+    function bukaModalBonEdit(uid, idRow) { const data = dataPiutang.find(x => x.idRow === idRow); if(!data) return; document.getElementById('bon-id').value = data.idRow; document.getElementById('bon-uid').value = data.uid; document.getElementById('modal-bon-title').innerHTML = '<i class="fa-solid fa-pen"></i> Edit Bon'; document.getElementById('bon-tanggal').value = data.tanggal; document.getElementById('bon-nama').value = data.nama; document.getElementById('bon-nominal').value = data.nominal.toLocaleString('id-ID'); new bootstrap.Modal(document.getElementById('modalBon')).show(); }
+    function handleBon() { const btn = document.getElementById('btn-bon'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...'; btn.disabled = true; const idRow = document.getElementById('bon-id').value, uid = document.getElementById('bon-uid').value; const userCabang = localStorage.getItem('bukuLinkCabang') || 'Pusat'; const dataBon = { tanggal: document.getElementById('bon-tanggal').value, nama: document.getElementById('bon-nama').value, nominal: unformatUang(document.getElementById('bon-nominal').value), cabang: userCabang }; const aksi = idRow === "" ? 'simpanPiutang' : 'editPiutang'; tampilkanLoading('Menyimpan Bon...'); callAPI(aksi, {uid: uid, idRowLama: idRow, data: dataBon}).then(() => { Swal.close(); selesaiBon(); }).catch(err => { Swal.close(); btn.innerHTML = '<i class="fa-solid fa-save"></i> Simpan Bon'; btn.disabled = false; Swal.fire('Error', err.message, 'error'); }); }
+    function selesaiBon() { const modalObj = bootstrap.Modal.getInstance(document.getElementById('modalBon')); if(modalObj) modalObj.hide(); setTimeout(bersihkanOverlay, 300); document.getElementById('btn-bon').innerHTML = '<i class="fa-solid fa-save"></i> Simpan Bon'; document.getElementById('btn-bon').disabled = false; Swal.fire({ icon: 'success', title: 'Tersimpan!', timer: 1500, showConfirmButton: false }); muatDashboard(document.getElementById('toggle-arsip').checked); }
+    function hapusBon(uid, idRow) { Swal.fire({ title: 'Hapus Bon?', text: "Data ini akan dihapus permanen.", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Hapus' }).then((res) => { if (res.isConfirmed) { tampilkanLoading('Menghapus Data...'); callAPI('hapusPiutang', {uid: uid, idRowLama: idRow}).then(()=> { Swal.close(); muatDashboard(document.getElementById('toggle-arsip').checked); }); } }); }
+    function lunasiBon(uid, idRow) { Swal.fire({ title: 'Tandai Lunas?', text: "Bon ini akan dicatat sudah dibayar hari ini.", icon: 'info', showCancelButton: true, confirmButtonText: 'Ya, Lunas!' }).then((res) => { if (res.isConfirmed) { tampilkanLoading('Mencatat Pelunasan...'); callAPI('lunasiPiutang', {uid: uid, idRowLama: idRow}).then(() => { Swal.close(); muatDashboard(document.getElementById('toggle-arsip').checked); }); } }); }
+    function unduhPDFBon() { document.getElementById('area-cetak-bon').style.display = 'block'; const element = document.getElementById('area-cetak-bon'); const namaFile = 'Laporan_Bon_' + new Date().getTime() + '.pdf'; const opt = { margin: 0.5, filename: namaFile, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, scrollX: 0, scrollY: 0 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } }; Swal.fire({title: 'Memproses PDF...', text: 'File akan segera diunduh.', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }}); html2pdf().set(opt).from(element).save().then(() => { Swal.close(); document.getElementById('area-cetak-bon').style.display = 'none'; Swal.fire('Berhasil!', 'PDF Bon diunduh.', 'success'); }); }
+
+    function prosesLaporan() { const start = document.getElementById('lap-start').value, end = document.getElementById('lap-end').value, jenis = document.getElementById('lap-jenis').value, filterCabang = document.getElementById('lap-cabang') ? document.getElementById('lap-cabang').value : ''; let dataLap = dataSemua; if (start || end || jenis || filterCabang) { document.getElementById('kop-periode').innerText = `Periode: ${start ? formatTglPendek(start) : 'Awal'} s.d ${end ? formatTglPendek(end) : 'Akhir'} ${jenis ? '('+jenis+')' : ''}`; const stTime = start ? new Date(start).setHours(0,0,0,0) : null, enTime = end ? new Date(end).setHours(23,59,59,999) : null; dataLap = dataSemua.filter(r => { let pass = true; if (jenis && r.jenis !== jenis) pass = false; if(filterCabang && r.cabang !== filterCabang) pass = false; const rTime = new Date(r.tanggal).getTime(); if (stTime && rTime < stTime) pass = false; if (enTime && rTime > enTime) pass = false; return pass; }); } else { document.getElementById('kop-periode').innerText = `Periode: Semua Data`; } let html = ''; let sBank=0, sFee=0, sPel=0, sCuan=0; dataLap.forEach(r => { sBank += r.adminBank; sFee += r.feeBank; sPel += r.biayaPel; sCuan += r.untung; html += `<tr><td>${formatTglPendek(r.tanggal)}<br><small class="text-muted">${r.cabang}</small></td><td>${r.jenis}</td><td>${formatRp(r.nominal)}</td><td class="text-danger">${formatRp(r.adminBank)}</td><td style="color:#764ba2;">${formatRp(r.feeBank)}</td><td class="text-success">${formatRp(r.biayaPel)}</td><td class="fw-bold" style="color:#00529C;">${formatRp(r.untung)}</td></tr>`; }); if(dataLap.length===0) html='<tr><td colspan="7">Data kosong</td></tr>'; if(document.getElementById('tabel-laporan')) document.getElementById('tabel-laporan').innerHTML = html; if(document.getElementById('lap-sum-bank')) document.getElementById('lap-sum-bank').innerText = formatRp(sBank); if(document.getElementById('lap-sum-fee')) document.getElementById('lap-sum-fee').innerText = formatRp(sFee); if(document.getElementById('lap-sum-biaya-pel')) document.getElementById('lap-sum-biaya-pel').innerText = formatRp(sPel); if(document.getElementById('lap-sum-cuan')) document.getElementById('lap-sum-cuan').innerText = formatRp(sCuan); }
+    function unduhPDF() { const element = document.getElementById('area-cetak'); const namaFile = 'Laporan_BukuLink_' + new Date().getTime() + '.pdf'; const opt = { margin: 0.5, filename: namaFile, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, scrollX: 0, scrollY: 0 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } }; Swal.fire({title: 'Memproses PDF...', text: 'File akan segera diunduh.', allowOutsideClick: false, didOpen: () => { Swal.showLoading() }}); html2pdf().set(opt).from(element).save().then(() => { Swal.close(); Swal.fire('Berhasil!', 'PDF berhasil diunduh.', 'success'); }); }
+
+    function renderTabelSetupTarif() { const jenisFilter = document.getElementById('tarif-jenis-filter').value; let html = ''; const tarifFiltered = listTarifGlobal.filter(t => t.jenis === jenisFilter).sort((a,b) => a.min - b.min); let maxTertinggi = 0; tarifFiltered.forEach(t => { const realIdx = listTarifGlobal.indexOf(t); html += `<tr><td>${formatRp(t.min)}</td><td>${formatRp(t.max)}</td><td class="fw-bold text-success">${formatRp(t.tarif)}</td><td class="text-danger">${formatRp(t.admBank)}</td><td style="color:#764ba2 !important;">${formatRp(t.feeBank)}</td><td><button class="btn btn-sm btn-danger py-0" onclick="hapusTarif(${realIdx})"><i class="fa-solid fa-xmark"></i></button></td></tr>`; if(t.max > maxTertinggi) maxTertinggi = t.max; }); if(tarifFiltered.length === 0) html='<tr><td colspan="6" class="text-muted small">Belum ada aturan untuk jenis ini</td></tr>'; if(document.getElementById('tabel-setup-tarif')) document.getElementById('tabel-setup-tarif').innerHTML = html; if(tarifFiltered.length > 0) { if(document.getElementById('tarif-min')) document.getElementById('tarif-min').value = (maxTertinggi + 1).toLocaleString('id-ID'); } else { if(document.getElementById('tarif-min')) document.getElementById('tarif-min').value = '0'; } }
+    function tambahTarif() { const jenis = document.getElementById('tarif-jenis-filter').value; const min=unformatUang(document.getElementById('tarif-min').value), max=unformatUang(document.getElementById('tarif-max').value); const adm=unformatUang(document.getElementById('tarif-adm').value), admBank=unformatUang(document.getElementById('tarif-adm-bank').value), feeBank=unformatUang(document.getElementById('tarif-fee-bank').value); if(isNaN(min) || isNaN(max) || isNaN(adm) || min >= max) { return Swal.fire('Rentang Tidak Logis', 'Harap periksa kembali rentang tarif Anda. Pastikan Minimal lebih kecil dari Maksimal.', 'error'); } const tarifJenisIni = listTarifGlobal.filter(t => t.jenis === jenis); let isOverlap = false; for(let i = 0; i < tarifJenisIni.length; i++) { const t = tarifJenisIni[i]; if(min <= t.max && max >= t.min) { isOverlap = true; break; } } if(isOverlap) { return Swal.fire('Rentang Bertabrakan', 'Rentang tarif ini bentrok dengan rentang yang sudah ada. Harap periksa kembali!', 'error'); } listTarifGlobal.push({jenis: jenis, min: min, max: max, tarif: adm, admBank: admBank, feeBank: feeBank}); document.getElementById('tarif-max').value=''; document.getElementById('tarif-adm').value=''; document.getElementById('tarif-adm-bank').value=''; document.getElementById('tarif-fee-bank').value=''; renderTabelSetupTarif(); Swal.fire({ title: 'Ditambahkan ke Antrean!', text: 'Jangan lupa klik tombol "Simpan Tarif" di bawah agar data tersimpan permanen ke server.', icon: 'info', timer: 3000, showConfirmButton: false }); }
+    function hapusTarif(idx) { listTarifGlobal.splice(idx, 1); renderTabelSetupTarif(); }
+    function simpanTarifKeServer() { const btn = document.getElementById('btn-simpan-tarif'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...'; btn.disabled = true; tampilkanLoading('Menyimpan Tarif...'); callAPI('simpanTarif', {dataTarif: listTarifGlobal}).then(() => { Swal.close(); Swal.fire('Berhasil!', 'Aturan Tarif baru sudah disimpan.', 'success'); btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Simpan Tarif'; btn.disabled = false; }).catch(err => { Swal.close(); btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Simpan Tarif'; btn.disabled = false; Swal.fire('Error', err.message, 'error');}); }
+
+    document.getElementById('upload-logo').addEventListener('change', function(e) { if (e.target.files[0]) { const reader = new FileReader(); reader.onload = function(evt) { document.getElementById('image-workspace').src = evt.target.result; document.getElementById('image-workspace').style.display = 'block'; document.getElementById('btn-crop').style.display = 'block'; if(cropper) cropper.destroy(); cropper = new Cropper(document.getElementById('image-workspace'), { aspectRatio: 1, viewMode: 1 }); }; reader.readAsDataURL(e.target.files[0]); } });
+    function prosesCrop() { if(cropper) { croppedBase64 = cropper.getCroppedCanvas({ width: 150, height: 150 }).toDataURL('image/png'); document.getElementById('image-workspace').src = croppedBase64; cropper.destroy(); cropper = null; document.getElementById('btn-crop').style.display = 'none'; Swal.fire('Sip!', 'Logo dipotong. Klik Simpan Profil.', 'success'); } }
+    
+    function simpanProfilKeServer() { const btn = document.getElementById('btn-simpan-profil'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...'; btn.disabled = true; const dataP = { namaToko: document.getElementById('set-nama').value, alamat: document.getElementById('set-alamat').value, kontak: document.getElementById('set-kontak').value, urlLogoLama: document.getElementById('set-url-lama').value, linkWindows: document.getElementById('set-link-win').value, linkAndroid: document.getElementById('set-link-and').value }; tampilkanLoading('Menyimpan Profil...'); callAPI('simpanProfil', {dataProfile: dataP, dataGambarBase64: croppedBase64}).then(() => { Swal.close(); Swal.fire('Berhasil!', 'Profil Toko diperbarui.', 'success'); croppedBase64 = null; document.getElementById('image-workspace').style.display = 'none'; document.getElementById('upload-logo').value = ''; btn.innerHTML = '<i class="fa-solid fa-save"></i> SIMPAN PROFIL TOKO'; btn.disabled = false; document.getElementById('sidebar-nama-toko').innerText = dataP.namaToko; document.getElementById('mobile-nama-toko').innerText = dataP.namaToko; document.getElementById('footer-nama-toko').innerText = dataP.namaToko; document.getElementById('pdf-nama-toko').innerText = dataP.namaToko; document.getElementById('pdf-alamat').innerText = dataP.alamat; }).catch(err => { Swal.close(); btn.innerHTML = '<i class="fa-solid fa-save"></i> SIMPAN PROFIL TOKO'; btn.disabled = false; Swal.fire('Error', err.message, 'error');}); }
+  </script>
+</body>
+</html>
