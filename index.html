@@ -199,9 +199,12 @@
             <div class="card-body">
               <div class="mb-3"><label class="fw-bold">Pilih Jenis Transaksi:</label>
                 <select id="tarif-jenis-filter" class="form-select border-success fw-bold" onchange="renderTabelSetupTarif()">
-                  <option value="Tarik Tunai">Tarik Tunai</option>
+                  <option value="Tarik Tunai via Transfer">Tarik Tunai via Transfer</option>
+                  <option value="EDC - Tarik Tunai">EDC - Tarik Tunai</option>
                   <option value="Transfer Sesama BRI">Transfer Sesama BRI</option>
+                  <option value="EDC - Transfer Sesama BRI">EDC - Transfer Sesama BRI</option>
                   <option value="Transfer Bank Lain">Transfer Bank Lain</option>
+                  <option value="EDC - Transfer Bank Lain">EDC - Transfer Bank Lain</option>
                   <option value="Bayar Tagihan/Briva">Bayar Tagihan/Briva</option>
                   <option value="Top Up E-Wallet">Top Up E-Wallet</option>
                   <option value="Jasa Transfer Sesama">Jasa Transfer (Rek. Pelanggan) Sesama BRI</option>
@@ -215,9 +218,9 @@
                   <div class="col-md-6"><label class="small">Max Nominal</label><input type="text" inputmode="numeric" id="tarif-max" class="form-control" oninput="formatInputUang(event)"></div>
                 </div>
                 <div class="row g-2 align-items-end">
-                  <div class="col-md-3"><label class="small text-success fw-bold">Biaya Pelanggan</label><input type="text" inputmode="numeric" id="tarif-adm" class="form-control" oninput="formatInputUang(event)"></div>
-                  <div class="col-md-3"><label class="small text-danger fw-bold">Admin Bank</label><input type="text" inputmode="numeric" id="tarif-adm-bank" class="form-control" oninput="formatInputUang(event)"></div>
-                  <div class="col-md-3"><label class="small text-info fw-bold" style="color:#764ba2 !important;">Fee Bank</label><input type="text" inputmode="numeric" id="tarif-fee-bank" class="form-control" oninput="formatInputUang(event)"></div>
+                  <div class="col-md-3"><label class="small text-success fw-bold">Biaya Pelanggan<br>"isi biaya dari pelanggan"</label><input type="text" inputmode="numeric" id="tarif-adm" class="form-control" oninput="formatInputUang(event)" placeholder="misal : 5000"></div>
+                  <div class="col-md-3"><label class="small text-danger fw-bold">Admin Bank<br>"isi jmlh potongan adm bank"</label><input type="text" inputmode="numeric" id="tarif-adm-bank" class="form-control" oninput="formatInputUang(event)" placeholder="kosongkan jika tidak ada"></div>
+                  <div class="col-md-3"><label class="small text-info fw-bold" style="color:#764ba2 !important;">Fee Bank <br>"isi fee yg kita terima dari bank"</label><input type="text" inputmode="numeric" id="tarif-fee-bank" class="form-control" oninput="formatInputUang(event)" placeholder="kosongkan jika tidak ada">></div>
                   <div class="col-md-3"><button class="btn btn-success fw-bold w-100" onclick="tambahTarif()"><i class="fa-solid fa-plus"></i> Tambah</button></div>
                 </div>
               </div>
@@ -242,12 +245,15 @@
                 <div class="col-md-3 col-6"><label class="small fw-bold">Jenis</label>
                   <select id="filter-jenis" class="form-select form-select-sm">
                     <option value="">Semua Jenis</option>
-                    <option value="Tarik Tunai">Tarik Tunai</option>
-                    <option value="Transfer Sesama BRI">Transfer Sesama BRI</option>
-                    <option value="Transfer Bank Lain">Transfer Bank Lain</option>
-                    <option value="Bayar Tagihan/Briva">Bayar Tagihan/Briva</option>
-                    <option value="Top Up E-Wallet">Top Up E-Wallet</option>
-                    <option value="Jasa Transfer Sesama">Jasa Transfer (Rek. Pelanggan) Sesama BRI</option>
+                    <option value="Tarik Tunai via Transfer">Tarik Tunai via Transfer</option>
+                  <option value="EDC - Tarik Tunai">EDC - Tarik Tunai</option>
+                  <option value="Transfer Sesama BRI">Transfer Sesama BRI</option>
+                  <option value="EDC - Transfer Sesama BRI">EDC - Transfer Sesama BRI</option>
+                  <option value="Transfer Bank Lain">Transfer Bank Lain</option>
+                  <option value="EDC - Transfer Bank Lain">EDC - Transfer Bank Lain</option>
+                  <option value="Bayar Tagihan/Briva">Bayar Tagihan/Briva</option>
+                  <option value="Top Up E-Wallet">Top Up E-Wallet</option>
+                  <option value="Jasa Transfer Sesama">Jasa Transfer (Rek. Pelanggan) Sesama BRI</option>
                   <option value="Jasa Transfer Bank Lain">Jasa Transfer (Rek. Pelanggan) Bank Lain</option>
                   </select>
                 </div>
@@ -307,13 +313,16 @@
                 <div class="col-md-3 col-12"><label class="small fw-bold">Jenis</label>
                   <select id="lap-jenis" class="form-select form-select-sm">
                     <option value="">Semua Jenis</option>
-                    <option value="Tarik Tunai">Tarik Tunai</option>
-                    <option value="Transfer Sesama BRI">Transfer Sesama BRI</option>
-                    <option value="Transfer Bank Lain">Transfer Bank Lain</option>
-                    <option value="Bayar Tagihan/Briva">Bayar Tagihan/Briva</option>
-                    <option value="Top Up E-Wallet">Top Up E-Wallet</option>
-                    <option value="Jasa Transfer Sesama">Jasa Transfer (Rek. Pelanggan) Sesama BRI</option>
-                   <option value="Jasa Transfer Bank Lain">Jasa Transfer (Rek. Pelanggan) Bank Lain</option>
+                    <option value="Tarik Tunai via Transfer">Tarik Tunai via Transfer</option>
+                  <option value="EDC - Tarik Tunai">EDC - Tarik Tunai</option>
+                  <option value="Transfer Sesama BRI">Transfer Sesama BRI</option>
+                  <option value="EDC - Transfer Sesama BRI">EDC - Transfer Sesama BRI</option>
+                  <option value="Transfer Bank Lain">Transfer Bank Lain</option>
+                  <option value="EDC - Transfer Bank Lain">EDC - Transfer Bank Lain</option>
+                  <option value="Bayar Tagihan/Briva">Bayar Tagihan/Briva</option>
+                  <option value="Top Up E-Wallet">Top Up E-Wallet</option>
+                  <option value="Jasa Transfer Sesama">Jasa Transfer (Rek. Pelanggan) Sesama BRI</option>
+                  <option value="Jasa Transfer Bank Lain">Jasa Transfer (Rek. Pelanggan) Bank Lain</option>
                   </select>
                 </div>
                 <div class="col-md-2 col-6"><label class="small fw-bold">Dari Tgl</label><input type="date" id="lap-start" class="form-control form-control-sm"></div>
@@ -409,12 +418,15 @@
             <div class="mb-3"><label class="form-label small fw-bold">Jenis Transaksi</label>
               <select id="trans-jenis" class="form-select border-primary" required onchange="cekAutoTarif()">
                 <option value="">Pilih...</option>
-                <option value="Tarik Tunai">Tarik Tunai</option>
-                <option value="Transfer Sesama BRI">Transfer Sesama BRI</option>
-                <option value="Transfer Bank Lain">Transfer Bank Lain</option>
-                <option value="Bayar Tagihan/Briva">Bayar Tagihan/Briva</option>
-                <option value="Top Up E-Wallet">Top Up E-Wallet</option>
-                <option value="Jasa Transfer Sesama">Jasa Transfer (Rek. Pelanggan) Sesama BRI</option>
+                <option value="Tarik Tunai via Transfer">Tarik Tunai via Transfer</option>
+                  <option value="EDC - Tarik Tunai">EDC - Tarik Tunai</option>
+                  <option value="Transfer Sesama BRI">Transfer Sesama BRI</option>
+                  <option value="EDC - Transfer Sesama BRI">EDC - Transfer Sesama BRI</option>
+                  <option value="Transfer Bank Lain">Transfer Bank Lain</option>
+                  <option value="EDC - Transfer Bank Lain">EDC - Transfer Bank Lain</option>
+                  <option value="Bayar Tagihan/Briva">Bayar Tagihan/Briva</option>
+                  <option value="Top Up E-Wallet">Top Up E-Wallet</option>
+                  <option value="Jasa Transfer Sesama">Jasa Transfer (Rek. Pelanggan) Sesama BRI</option>
                   <option value="Jasa Transfer Bank Lain">Jasa Transfer (Rek. Pelanggan) Bank Lain</option>
               </select>
             </div>
@@ -461,8 +473,8 @@
     // =========================================================================
     // WAJIB: GANTI TULISAN DI BAWAH DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
     // =========================================================================
-    const API_URL = "https://script.google.com/macros/s/AKfycbzhf49O6oWA0WsTjvLpdfsoBMV6RCjE0ByKY8wCaqQA5MLWFHr4ZmRoR3WKM-lznDeARw/exec"; 
-
+//    const API_URL = "https://script.google.com/a/macros/admin.sma.belajar.id/s/AKfycbwerw8_4Zu9O6MXoHBhnxZLSxIxLeuw_86RmDUUzY8lwtul4Ve_63ODZfIg8YPR2WOP4g/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzhf49O6oWA0WsTjvLpdfsoBMV6RCjE0ByKY8wCaqQA5MLWFHr4ZmRoR3WKM-lznDeARw/exec";
     function callAPI(actionName, payloadData) {
       return fetch(API_URL, {
         method: 'POST',
